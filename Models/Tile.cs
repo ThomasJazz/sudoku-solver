@@ -40,14 +40,4 @@ namespace sudoku.solver
                 return $" {this.Value.ToString()} ";
         }
     }
-
-    class TileGroup
-    {
-        public Dictionary<string, Tile> Tiles = new Dictionary<string, Tile>();
-
-        public TileGroup()
-        {
-
-        }
-    }
 }

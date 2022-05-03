@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
@@ -15,6 +16,14 @@ namespace sudoku.solver
             }
 
             return flat;
+        }
+
+        public static void PrintJson(object o, bool indent=true)
+        {
+            if (indent)
+                Console.WriteLine(JsonConvert.SerializeObject(o, Formatting.Indented));
+            else
+                Console.WriteLine(JsonConvert.SerializeObject(o));
         }
     }
 }

@@ -18,35 +18,54 @@ namespace sudoku.solver
         /****** BODY ******/
         static void Main(string[] args)
         {
-            SudokuBoard board = new SudokuBoard();
-            board = Sudoku.ReadBoard(RelativeConfigPath);
+            SudokuBoard game = new SudokuBoard();
+            game = Sudoku.ReadBoard(RelativeConfigPath);
 
-            var solved = PlayGame(board);
+            // Debugging
+            //var multiPlays = game.GetMultiPlays(6);
+            //var groupsMissing1 = game.GetGroupsWithoutNumber(6);
+            //var playTiles = game.GetSingleOptionTiles();
+
+            // Playing the game
+            var solved = PlayGame(game);
             Sudoku.ExportBoard(solved, WriteSolutionToPath);
         }
 
-        static SudokuBoard PlayGame(SudokuBoard board)
+        static SudokuBoard PlayGame(SudokuBoard game)
         {
-            SudokuBoard playBoard = board;
+            SudokuBoard playBoard = game;
             int iter = 0;
 
             while (playBoard.HasEmptyTile())
             {   
                 List<Tile> tilesPlayedThisIter = new List<Tile>();
+
+                // Search for specific numbers to play
                 for (int searchVal = 1; searchVal <= SudokuBoard.NumRows; searchVal++)
                 {
                     Console.WriteLine($"Finding play options for {searchVal}...");
-                    var options = playBoard.GetPlays(searchVal);
+                    var options = game.GetPlays(searchVal);
 
                     // Make any available moves and sleep for a second
                     foreach (Tile tile in options)
                     {
                         tilesPlayedThisIter.Add(tile);
 
-                        Console.WriteLine($"\t{JsonConvert.SerializeObject(tile)}");
                         playBoard.PlayTile(tile);
-                        Thread.Sleep(500);
+                        Thread.Sleep(250);
                     }
+                }
+
+                // Find squares that can only have one specific number placed there
+                Console.WriteLine($"Finding single option tiles...");
+                var singleOptions = game.GetSingleOptionTiles();
+
+                foreach (Tile tile in singleOptions)
+                {
+                    playBoard.PlayTile(tile);
+                    tilesPlayedThisIter.Add(tile);
+
+                    Thread.Sleep(250);
                 }
 
                 iter++;
@@ -62,14 +81,6 @@ namespace sudoku.solver
             }
 
             return playBoard;
-        }
-
-        public static void PrintObj(object o, bool indent=true)
-        {
-            if (indent)
-                Console.WriteLine(JsonConvert.SerializeObject(o, Formatting.Indented));
-            else
-                Console.WriteLine(JsonConvert.SerializeObject(o));
         }
     }
 }
