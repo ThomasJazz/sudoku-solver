@@ -1,5 +1,7 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
@@ -9,6 +11,8 @@ namespace sudoku.solver
         public int Row { get; }
         public int Column { get; }
         public int GroupNumber { get; }
+
+        [JsonIgnore]
         public bool IsFinal { get; } = false;
 
         public Tile(int Value, int Row, int Column)

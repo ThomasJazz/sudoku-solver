@@ -149,6 +149,29 @@ namespace sudoku.solver
             return playTiles;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<Tile> GetAllTileOptions()
+        {
+            List<Tile> emptyTiles = GetTilesWithNumber(0);
+            List<Tile> tileOptions = new List<Tile>();
+
+            // Loop through all the empty tiles and see if they have only one possible value 
+            foreach (Tile tile in emptyTiles)
+            {
+                HashSet<int> availableNumbers = this.GetPossibleTileValues(tile);
+
+                foreach (int num in availableNumbers)
+                {
+                    tileOptions.Add(new Tile(num, tile.Row, tile.Column));
+                }
+            }
+            
+            return tileOptions;
+        }
+
         public HashSet<int> GetPossibleTileValues(Tile tile)
         {
             // Get all the values that intersect/collide with this tile
@@ -234,6 +257,118 @@ namespace sudoku.solver
 
             return groupsWithNumber;
         }
+
+        public List<RowLock> GetGroupRowLocks()
+        {
+            List<RowLock> locks = new List<RowLock>();
+            List<Tile> allOptions = this.GetAllTileOptions();
+            int[] groupNums = this.TileBoxes.Keys.ToArray();
+            
+            // Loop through all tiles in all groups
+            foreach (int groupNum in groupNums)
+            {
+                Dictionary<int, RowLock> mappedLocks = new Dictionary<int, RowLock>();
+                RowLock lockedRow = new RowLock(groupNum);
+
+                List<Tile> groupTileOptions = allOptions.Where(tile => tile.GroupNumber == groupNum).ToList();
+                
+                foreach (Tile currTile in groupTileOptions)
+                {
+                    // Check if the tile's value/number could be in any other row of the group
+                    List<int> alternateRows = groupTileOptions
+                        .Where(tile => tile.Value == currTile.Value && tile.Row != currTile.Row)
+                        .Select(tile => tile.Row)
+                        .ToList();
+
+                    // If the value from the tile can only go in this row, that means it is a row lock
+                    if (alternateRows.Count == 0)
+                    {
+                        if (!mappedLocks.ContainsKey(currTile.Row))
+                            mappedLocks[currTile.Row] = new RowLock(groupNum);
+                        
+                        mappedLocks[currTile.Row].LockedNumbers.Add(currTile.Value);
+                    }
+                        
+                }
+
+                locks.AddRange(mappedLocks.Values);
+            }
+
+            return locks;
+        }
+
+        public List<ColumnLock> GetGroupColumnLocks()
+        {
+            List<ColumnLock> locks = new List<ColumnLock>();
+            List<Tile> allOptions = this.GetAllTileOptions();
+            int[] groupNums = this.TileBoxes.Keys.ToArray();
+            
+            // Loop through all tiles in all groups
+            foreach (int groupNum in groupNums)
+            {
+                Dictionary<int, ColumnLock> mappedLocks = new Dictionary<int, ColumnLock>();
+                ColumnLock lockedColumn = new ColumnLock(groupNum);
+
+                List<Tile> groupTileOptions = allOptions.Where(tile => tile.GroupNumber == groupNum).ToList();
+                
+                foreach (Tile currTile in groupTileOptions)
+                {
+                    // Check if the tile's value/number could be in any other column of the group
+                    List<int> alternateColumns = groupTileOptions
+                        .Where(tile => tile.Value == currTile.Value && tile.Column != currTile.Column)
+                        .Select(tile => tile.Column)
+                        .ToList();
+
+                    // If the value from the tile can only go in this column, that means it is a column lock
+                    if (alternateColumns.Count == 0)
+                    {
+                        if (!mappedLocks.ContainsKey(currTile.Column))
+                            mappedLocks[currTile.Column] = new ColumnLock(groupNum);
+                        
+                        mappedLocks[currTile.Column].LockedNumbers.Add(currTile.Value);
+                    }
+                        
+                }
+
+                locks.AddRange(mappedLocks.Values);
+            }
+
+            return locks;
+        }
+
+        // public Dictionary<int, HashSet<int>> GetGroupColumnLocks()
+        // {
+        //     Dictionary<int, HashSet<int>> columnLocks = new Dictionary<int, HashSet<int>>();
+        //     List<Tile> allOptions = this.GetAllTileOptions();
+        //     int[] groupNums = this.TileBoxes.Keys.ToArray();
+            
+        //     // Loop through all tiles in all groups
+        //     foreach (int groupNum in groupNums)
+        //     {
+        //         List<Tile> groupTileOptions = allOptions.Where(tile => tile.GroupNumber == groupNum).ToList();
+                
+        //         foreach (Tile currTile in groupTileOptions)
+        //         {
+        //             // Check if the tile's value/number could be in any other column of the group
+        //             List<int> alternateColumns = groupTileOptions
+        //                 .Where(tile => tile.Value == currTile.Value && tile.Column != currTile.Column)
+        //                 .Select(tile => tile.Column)
+        //                 .ToList();
+
+        //             // If the value from the tile can only go in this column, that means it is a column lock
+        //             if (alternateColumns.Count == 0)
+        //             {
+        //                 if (!columnLocks.ContainsKey(currTile.Column))
+        //                     columnLocks[currTile.Column] = new HashSet<int>();
+                        
+        //                 columnLocks[currTile.Column].Add(currTile.Value);
+        //             }
+                        
+        //         }
+        //     }
+
+        //     return columnLocks;
+        // }
 
         /************ ROW INFO ************/
         /// <summary>
@@ -444,7 +579,7 @@ namespace sudoku.solver
 
         private void UpdateTile(Tile tile)
         {
-            Helper.PrintJson(tile);
+            Helper.PrintJson(tile, false);
             this.Board[tile.Row][tile.Column] = tile;
         }
 
