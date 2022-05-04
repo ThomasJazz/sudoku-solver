@@ -51,7 +51,7 @@ namespace sudoku.solver
             }
             catch (NoMovesFoundException e)
             {
-                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileOptions(), "GroupNumber");
+                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCandidates(), "GroupNumber");
                 Helper.PrintJson(mappedOptions);
 
                 Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
@@ -71,7 +71,7 @@ namespace sudoku.solver
                 for (int searchVal = 1; searchVal <= SudokuBoard.NumRows; searchVal++)
                 {
                     Console.WriteLine($"Finding play options for {searchVal}...");
-                    var options = playBoard.GetPlays(searchVal);
+                    var options = playBoard.FindBidirectionalCandidates(searchVal);
 
                     // Make any available moves
                     tilesPlayedThisIter.AddRange(options);
@@ -80,12 +80,12 @@ namespace sudoku.solver
                 
                 // Console.WriteLine($"Finding single option tiles...");
                 // Find squares that can only have one specific number placed there
-                var singleOptions = playBoard.GetSingleOptionTiles();
+                var singleOptions = playBoard.FindSingleCandidates();
                 playBoard.PlayTiles(singleOptions);
                 tilesPlayedThisIter.AddRange(singleOptions);
 
                 // Find squares by row where their neighbors cannot play it
-                var rowOptions = playBoard.SearchRowsForPlayable();
+                var rowOptions = playBoard.FindRowCandidates();
                 playBoard.PlayTiles(rowOptions);
                 tilesPlayedThisIter.AddRange(rowOptions);
 

@@ -5,13 +5,29 @@ using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
-    class Tile
+    class TileParent
+    {
+        public int Row { get; set; }
+        public int Column { get; set; }
+        public int GroupNumber { get; set; }
+
+        // public TileParent(int Row, int Column) 
+        // {
+        //     this.Row = Row;
+        //     this.Column = Column;
+        // }
+
+        public void SetGroupNumber()
+        {
+            int groupLevel = 2 * (this.Row/3);
+            this.GroupNumber = groupLevel + ((this.Row / 3) + (this.Column / 3));
+        }
+    }
+
+    class Tile : TileParent
     {
         public int Value { get; set; } = 0;
-        public int Row { get; }
-        public int Column { get; }
-        public int GroupNumber { get; }
-
+        
         [JsonIgnore]
         public bool IsFinal { get; } = false;
 
@@ -21,8 +37,7 @@ namespace sudoku.solver
             this.Row = Row;
             this.Column = Column;
 
-            int groupLevel = 2 * (Row/3);
-            this.GroupNumber = groupLevel + ((Row / 3) + (Column / 3));
+            this.SetGroupNumber();
         }
 
         public Tile(int Value, int Row, int Column, bool IsFinal)
@@ -32,8 +47,7 @@ namespace sudoku.solver
             this.Column = Column;
             this.IsFinal = IsFinal;
 
-            int groupLevel = 2 * (Row / 3);
-            this.GroupNumber = groupLevel + ((Row / 3) + (Column / 3));
+            this.SetGroupNumber();
         }
 
         public override string ToString()
@@ -50,11 +64,15 @@ namespace sudoku.solver
         }
     }
 
-    class TileOptions
+    class TileCandidate : TileParent
     {
-        List<int> PossibleValues = new List<int>();
-        public int Row { get; }
-        public int Column { get; }
-        public int GroupNumber { get; }
+        public List<int> PossibleValues { get; set; } = new List<int>();
+
+        public TileCandidate(int Row, int Column)
+        {
+            this.Row = Row;
+            this.Column = Column;
+            this.SetGroupNumber();
+        }
     }
 }

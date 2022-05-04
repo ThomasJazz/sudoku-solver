@@ -17,7 +17,7 @@ namespace sudoku.solver
         private List<List<Tile>> Board = new List<List<Tile>>();
 
         // This groups the tiles and is updated every time Board is updated
-        public Dictionary<int, List<Tile>> TileBoxes = new Dictionary<int, List<Tile>>();
+        public Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
 
         /**************************************/
         /************ CONSTRUCTORS ************/
@@ -69,26 +69,11 @@ namespace sudoku.solver
         /*****************************************/
         /************ BOARD ACCESSORS ************/
         /*****************************************/
-
-        /************ TILE INFO ************/
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="number"></param>
-        /// <returns></returns>
-        public List<Tile> GetTilesWithNumber(int number)
-        {
-            List<Tile> tiles = new List<Tile>();
-
-            foreach (List<Tile> row in this.Board)
-            {
-                tiles.AddRange(row.Where(tile => tile.Value == number));
-            }
-
-            return tiles;
-        }
-
-        public List<Tile> GetPlays(int number)
+        
+        /************ TILE CANDIDATE SEARCH FUNCTIONS ************/
+        // NOTE: Largely basing these on what I've learned here: 
+        // https://www.conceptispuzzles.com/index.aspx?uri=puzzle/sudoku/techniques
+        public List<Tile> FindBidirectionalCandidates(int number)
         {
             List<Tile> returnTiles = new List<Tile>();
             Dictionary<int, List<Tile>> potentialTiles = GetPotentialMoves(number);
@@ -102,41 +87,13 @@ namespace sudoku.solver
             return returnTiles;
         }
 
-        public Dictionary<int, List<Tile>> GetPotentialMoves(int number)
-        {
-            Dictionary<int, List<Tile>> potentialTiles = new Dictionary<int, List<Tile>>();
-            HashSet<int> includeRows = GetRowsWithoutNumber(number);
-            HashSet<int> includeCols = GetColumnsNotContainingValue(number);
-            HashSet<int> includeGroups = GetGroupsWithoutNumber(number);
-
-            foreach (Tile tile in this.GetFlattenedBoard())
-            {
-                if (tile.Value != 0)
-                {
-                    continue;
-                }
-                // Check if the tile matches ALL of the inclusion criteria
-                else if (includeRows.Contains(tile.Row) 
-                    && includeCols.Contains(tile.Column) 
-                    && includeGroups.Contains(tile.GroupNumber))
-                {
-                    if (!potentialTiles.ContainsKey(tile.GroupNumber))
-                        potentialTiles[tile.GroupNumber] = new List<Tile>();
-                    
-                    potentialTiles[tile.GroupNumber].Add(new Tile(number, tile.Row, tile.Column));
-                }
-            }
-
-            return potentialTiles;
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<Tile> GetSingleOptionTiles()
+        public List<Tile> FindSingleCandidates()
         {
-            List<Tile> emptyTiles = GetTilesWithNumber(0);
+            List<Tile> emptyTiles = GetTilesContainingValue(0);
             List<Tile> playTiles = new List<Tile>();
 
             // Loop through all the empty tiles and see if they have only one possible value 
@@ -161,41 +118,7 @@ namespace sudoku.solver
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<Tile> GetAllTileOptions()
-        {
-            List<Tile> emptyTiles = GetTilesWithNumber(0);
-            List<Tile> tileOptions = new List<Tile>();
-
-            // Loop through all the empty tiles and see if they have only one possible value 
-            foreach (Tile tile in emptyTiles)
-            {
-                HashSet<int> availableNumbers = this.GetPossibleTileValues(tile);
-
-                foreach (int num in availableNumbers)
-                {
-                    tileOptions.Add(new Tile(num, tile.Row, tile.Column));
-                }
-            }
-            
-            return tileOptions;
-        }
-
-        public HashSet<int> GetPossibleTileValues(Tile tile)
-        {
-            // Get all the values that intersect/collide with this tile
-            HashSet<int> rowValues = this.Board[tile.Row].Select(tile => tile.Value).ToHashSet();
-            HashSet<int> colValues = GetTilesInColumn(tile.Column).Select(tile => tile.Value).ToHashSet();
-            HashSet<int> groupValues = GetGroup(tile.GroupNumber).Select(tile => tile.Value).ToHashSet();
-
-            HashSet<int> remaining = NumberSet;
-            remaining = remaining.Except(rowValues).ToHashSet();
-            remaining = remaining.Except(colValues).ToHashSet();
-            remaining = remaining.Except(groupValues).ToHashSet();
-
-            return remaining;
-        }
-
-        public List<Tile> SearchRowsForPlayable()
+        public List<Tile> FindRowCandidates()
         {
             List<Tile> playableTiles = new List<Tile>();
 
@@ -233,36 +156,141 @@ namespace sudoku.solver
             return playableTiles;
         }
 
-        /************ GROUP INFO ************/
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Dictionary<int, List<Tile>> GetTileBoxes()
+        public List<Tile> GetAllTileCandidates()
         {
-            Dictionary<int, List<Tile>> TileBoxes = new Dictionary<int, List<Tile>>();
+            List<Tile> emptyTiles = GetTilesContainingValue(0);
+            List<Tile> tileOptions = new List<Tile>();
+
+            // Loop through all the empty tiles and see if they have only one possible value 
+            foreach (Tile tile in emptyTiles)
+            {
+                HashSet<int> availableNumbers = this.GetPossibleTileValues(tile);
+
+                foreach (int num in availableNumbers)
+                {
+                    tileOptions.Add(new Tile(num, tile.Row, tile.Column));
+                }
+            }
+            
+            return tileOptions;
+        }
+
+        public List<TileCandidate> GetGroupNakedPairs()
+        {
+            List<TileCandidate> candidates = new List<TileCandidate>();
+
+            foreach (KeyValuePair<int, List<Tile>> group in this.TileGroups)
+            {
+                int groupNum = group.Key;
+
+                List<Tile> emptyTiles = group.Value.Where(tile => tile.Value == 0).ToList();
+                foreach (Tile tile in emptyTiles)
+                {
+                    TileCandidate candidate = new TileCandidate(tile.Row, tile.Column);
+                    candidate.PossibleValues.AddRange(this.GetPossibleTileValues(tile).ToList());
+                }
+            }
+
+            return candidates;
+        }
+        
+        /************ TILE INFO ************/
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        public List<Tile> GetTilesContainingValue(int number)
+        {
+            List<Tile> tiles = new List<Tile>();
+
+            foreach (List<Tile> row in this.Board)
+            {
+                tiles.AddRange(row.Where(tile => tile.Value == number));
+            }
+
+            return tiles;
+        }
+
+        public Dictionary<int, List<Tile>> GetPotentialMoves(int number)
+        {
+            Dictionary<int, List<Tile>> potentialTiles = new Dictionary<int, List<Tile>>();
+            HashSet<int> includeRows = GetRowsWithoutNumber(number);
+            HashSet<int> includeCols = GetColumnsNotContainingValue(number);
+            HashSet<int> includeGroups = GetGroupsWithoutNumber(number);
+
+            foreach (Tile tile in this.GetFlattenedBoard())
+            {
+                if (tile.Value != 0)
+                {
+                    continue;
+                }
+                // Check if the tile matches ALL of the inclusion criteria
+                else if (includeRows.Contains(tile.Row) 
+                    && includeCols.Contains(tile.Column) 
+                    && includeGroups.Contains(tile.GroupNumber))
+                {
+                    if (!potentialTiles.ContainsKey(tile.GroupNumber))
+                        potentialTiles[tile.GroupNumber] = new List<Tile>();
+                    
+                    potentialTiles[tile.GroupNumber].Add(new Tile(number, tile.Row, tile.Column));
+                }
+            }
+
+            return potentialTiles;
+        }
+
+
+        public HashSet<int> GetPossibleTileValues(Tile tile)
+        {
+            // Get all the values that intersect/collide with this tile
+            HashSet<int> rowValues = this.Board[tile.Row].Select(tile => tile.Value).ToHashSet();
+            HashSet<int> colValues = GetTilesInColumn(tile.Column).Select(tile => tile.Value).ToHashSet();
+            HashSet<int> groupValues = GetGroup(tile.GroupNumber).Select(tile => tile.Value).ToHashSet();
+
+            HashSet<int> remaining = NumberSet;
+            remaining = remaining.Except(rowValues).ToHashSet();
+            remaining = remaining.Except(colValues).ToHashSet();
+            remaining = remaining.Except(groupValues).ToHashSet();
+
+            return remaining;
+        }
+
+        /************ GROUP INFO ************/
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<int, List<Tile>> GetTileGroups()
+        {
+            Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
             List<Tile> flatBoard = this.GetFlattenedBoard();
             
             for (int i = 0; i < this.Board.Count; i++)
             {
-                TileBoxes[i] = new List<Tile>();
-                TileBoxes[i] = flatBoard.Where(tile => tile.GroupNumber == i).ToList();
+                TileGroups[i] = new List<Tile>();
+                TileGroups[i] = flatBoard.Where(tile => tile.GroupNumber == i).ToList();
             }
 
-            return TileBoxes;
+            return TileGroups;
         }
 
         public List<Tile> GetGroup(int groupNumber)
         {
-            return this.GetTileBoxes()[groupNumber];
+            return this.GetTileGroups()[groupNumber];
         }
 
         public List<Tile> GetVerticalGroupsWithOffset(int offset = 0)
         {
             List<Tile> tiles = new List<Tile>();
-            tiles.AddRange(this.TileBoxes[0 + offset]);
-            tiles.AddRange(this.TileBoxes[3 + offset]);
-            tiles.AddRange(this.TileBoxes[6 + offset]);
+            tiles.AddRange(this.TileGroups[0 + offset]);
+            tiles.AddRange(this.TileGroups[3 + offset]);
+            tiles.AddRange(this.TileGroups[6 + offset]);
 
             return tiles;
         }
@@ -275,7 +303,7 @@ namespace sudoku.solver
         public HashSet<int> GetGroupsWithoutNumber(int number)
         {
             HashSet<int> groupsWithoutNumber = new HashSet<int>();
-            var groups = this.GetTileBoxes();
+            var groups = this.GetTileGroups();
 
             foreach (KeyValuePair<int, List<Tile>> kvp in groups)
             {
@@ -291,7 +319,7 @@ namespace sudoku.solver
         public HashSet<int> GetGroupsWithNumber(int number)
         {
             HashSet<int> groupsWithNumber = new HashSet<int>();
-            var groups = this.GetTileBoxes();
+            var groups = this.GetTileGroups();
 
             foreach (KeyValuePair<int, List<Tile>> kvp in groups)
             {
@@ -307,8 +335,8 @@ namespace sudoku.solver
         public List<RowLock> GetGroupRowLocks()
         {
             List<RowLock> locks = new List<RowLock>();
-            List<Tile> allOptions = this.GetAllTileOptions();
-            int[] groupNums = this.TileBoxes.Keys.ToArray();
+            List<Tile> allOptions = this.GetAllTileCandidates();
+            int[] groupNums = this.TileGroups.Keys.ToArray();
             
             // Loop through all tiles in all groups
             foreach (int groupNum in groupNums)
@@ -346,8 +374,8 @@ namespace sudoku.solver
         public List<ColumnLock> GetGroupColumnLocks()
         {
             List<ColumnLock> locks = new List<ColumnLock>();
-            List<Tile> allOptions = this.GetAllTileOptions();
-            int[] groupNums = this.TileBoxes.Keys.ToArray();
+            List<Tile> allOptions = this.GetAllTileCandidates();
+            int[] groupNums = this.TileGroups.Keys.ToArray();
             
             // Loop through all tiles in all groups
             foreach (int groupNum in groupNums)
@@ -381,40 +409,6 @@ namespace sudoku.solver
 
             return locks;
         }
-
-        // public Dictionary<int, HashSet<int>> GetGroupColumnLocks()
-        // {
-        //     Dictionary<int, HashSet<int>> columnLocks = new Dictionary<int, HashSet<int>>();
-        //     List<Tile> allOptions = this.GetAllTileOptions();
-        //     int[] groupNums = this.TileBoxes.Keys.ToArray();
-            
-        //     // Loop through all tiles in all groups
-        //     foreach (int groupNum in groupNums)
-        //     {
-        //         List<Tile> groupTileOptions = allOptions.Where(tile => tile.GroupNumber == groupNum).ToList();
-                
-        //         foreach (Tile currTile in groupTileOptions)
-        //         {
-        //             // Check if the tile's value/number could be in any other column of the group
-        //             List<int> alternateColumns = groupTileOptions
-        //                 .Where(tile => tile.Value == currTile.Value && tile.Column != currTile.Column)
-        //                 .Select(tile => tile.Column)
-        //                 .ToList();
-
-        //             // If the value from the tile can only go in this column, that means it is a column lock
-        //             if (alternateColumns.Count == 0)
-        //             {
-        //                 if (!columnLocks.ContainsKey(currTile.Column))
-        //                     columnLocks[currTile.Column] = new HashSet<int>();
-                        
-        //                 columnLocks[currTile.Column].Add(currTile.Value);
-        //             }
-                        
-        //         }
-        //     }
-
-        //     return columnLocks;
-        // }
 
         /************ ROW INFO ************/
         /// <summary>
@@ -568,7 +562,7 @@ namespace sudoku.solver
             }
 
             // Check if there is already a tile in the same group with the same number
-            if (this.TileBoxes[group].Any(tile => tile.Value == val))
+            if (this.TileGroups[group].Any(tile => tile.Value == val))
                 return false;
             
 
@@ -656,7 +650,7 @@ namespace sudoku.solver
 
         private void UpdateTileBoxes()
         {
-            this.TileBoxes = GetTileBoxes();
+            this.TileGroups = GetTileGroups();
         }
 
         private List<Tile> GetFlattenedBoard()
