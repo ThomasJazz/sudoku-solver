@@ -8,28 +8,38 @@ namespace sudoku.solver
 {
     class NoMovesFoundException : Exception
     {
-        public NoMovesFoundException(){}
+        public SudokuBoard OriginalBoard { get; set; }
+        public SudokuBoard FailedBoard { get; set; }
+        public NoMovesFoundException()
+        {
+            FailedBoard = new SudokuBoard();
+            OriginalBoard = new SudokuBoard();
+        }
 
-        public NoMovesFoundException(string message)
-            : base(message){}
+        public NoMovesFoundException(string message, SudokuBoard origBoard, SudokuBoard newBoard)
+            : base(message)
+        {
+            OriginalBoard = origBoard;
+            FailedBoard = newBoard;
+        }
 
         public NoMovesFoundException(string message, Exception inner)
             : base(message, inner)
         {
+            OriginalBoard = new SudokuBoard();
+            FailedBoard = new SudokuBoard();
         }
     }
 
     class Sudoku
     {
-        
-        public Sudoku(){}
+        public Sudoku() {}
 
         public static SudokuBoard ReadBoard(string filePath)
         {
             Console.WriteLine($"Loading board {Path.GetFileName(filePath)}...");
 
             List<Tile> tiles = new List<Tile>();
-
             List<string> lines = File.ReadAllLines(filePath).ToList();
 
             int currRow = 0;
@@ -68,7 +78,20 @@ namespace sudoku.solver
 
             using (StreamWriter file = new StreamWriter($"{filePath}"))
             {
-                file.WriteLine(sb.ToString()); // "sb" is the StringBuilder
+                file.WriteLine(sb.ToString());
+            }
+        }
+
+        public static void ExportBoards(SudokuBoard original, SudokuBoard modified, string filePath)
+        {
+            StringBuilder sb = new StringBuilder("Original:\n");
+            sb.Append(original.GetBoardStringBuilder());
+            sb.Append("\nModified:\n");
+            sb.Append(modified.GetBoardStringBuilder());
+            
+            using (StreamWriter file = new StreamWriter($"{filePath}"))
+            {
+                file.WriteLine(sb.ToString());
             }
         }
     }

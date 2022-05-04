@@ -43,5 +43,18 @@ namespace sudoku.solver
             else
                 return $" {this.Value.ToString()} ";
         }
+
+        public string ToCoordsString()
+        {
+            return $"{this.Row}-{this.Value}";
+        }
+    }
+
+    class TileOptions
+    {
+        List<int> PossibleValues = new List<int>();
+        public int Row { get; }
+        public int Column { get; }
+        public int GroupNumber { get; }
     }
 }

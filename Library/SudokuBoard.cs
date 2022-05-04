@@ -52,6 +52,14 @@ namespace sudoku.solver
             UpdateTileBoxes();
         }
 
+        public void PlayTiles(List<Tile> tiles)
+        {
+            foreach (Tile tile in tiles)
+            {
+                PlayTile(tile);
+            }
+        }
+
         public void RemoveTile(int row, int column)
         {
             UpdateTile(new Tile(0, row, column));
@@ -98,7 +106,7 @@ namespace sudoku.solver
         {
             Dictionary<int, List<Tile>> potentialTiles = new Dictionary<int, List<Tile>>();
             HashSet<int> includeRows = GetRowsWithoutNumber(number);
-            HashSet<int> includeCols = GetColumnsWithoutNumber(number);
+            HashSet<int> includeCols = GetColumnsNotContainingValue(number);
             HashSet<int> includeGroups = GetGroupsWithoutNumber(number);
 
             foreach (Tile tile in this.GetFlattenedBoard())
@@ -185,6 +193,44 @@ namespace sudoku.solver
             remaining = remaining.Except(groupValues).ToHashSet();
 
             return remaining;
+        }
+
+        public List<Tile> SearchRowsForPlayable()
+        {
+            List<Tile> playableTiles = new List<Tile>();
+
+            for (int rowNumber = 0; rowNumber < NumRows; rowNumber++)
+            {
+                List<Tile> emptyTiles = GetEmptyTilesFromRow(rowNumber);
+                Dictionary<int, List<Tile>> tileOptions = new Dictionary<int, List<Tile>>();
+
+                foreach (Tile tile in emptyTiles)
+                {
+                    var possibleNumbersInTile = GetPossibleTileValues(tile);
+
+                    foreach (int number in possibleNumbersInTile)
+                    {
+                        if (!tileOptions.ContainsKey(number))
+                            tileOptions[number] = new List<Tile>();
+                        
+                        tileOptions[number].Add(tile);
+                    }
+                }
+
+                // If a number is only playable in one tile, we should play it
+                foreach (KeyValuePair<int, List<Tile>> kvp in tileOptions)
+                {
+                    if (kvp.Value.Count == 1)
+                    {
+                        Tile temp = kvp.Value.First();
+                        playableTiles.Add(new Tile(kvp.Key, temp.Row, temp.Column));
+                    }
+                }
+                if (rowNumber == 7)
+                    Helper.PrintJson(tileOptions);
+            }
+            
+            return playableTiles;
         }
 
         /************ GROUP INFO ************/
@@ -416,6 +462,16 @@ namespace sudoku.solver
             return this.Board[rowNumber];
         }
 
+        public List<Tile> GetTilesFromRow(int rowNumber, int value)
+        {
+            return GetRow(rowNumber).Where(tile => tile.Value == value).ToList();
+        }
+
+        public List<Tile> GetEmptyTilesFromRow(int rowNumber)
+        {
+            return GetRow(rowNumber).Where(tile => tile.Value == 0).ToList();
+        }
+
         // public List<Tile> GetMissingNumbersFromRow(int rowNumber)
         // {
         //     HashSet<int> missingNumbers = new HashSet<int>(){1,2,3,4,5,6,7,8,9};
@@ -428,7 +484,7 @@ namespace sudoku.solver
 
         /************ COLUMN INFO ************/
 
-        public HashSet<int> GetColumnsWithNumber(int number)
+        public HashSet<int> GetColumnsContainingValue(int number)
         {
             HashSet<int> columnsWithNumber = new HashSet<int>();
 
@@ -445,9 +501,9 @@ namespace sudoku.solver
             return columnsWithNumber;
         }
 
-        public HashSet<int> GetColumnsWithoutNumber(int number)
+        public HashSet<int> GetColumnsNotContainingValue(int number)
         {
-            HashSet<int> columnsWithNumber = GetColumnsWithNumber(number);
+            HashSet<int> columnsWithNumber = GetColumnsContainingValue(number);
             HashSet<int> columnsWithoutNumber = new HashSet<int>();
 
             for (int i = 0; i < NumColumns; i++)
@@ -465,6 +521,18 @@ namespace sudoku.solver
             for (int i = 0; i < NumRows; i++)
             {
                 tiles.Add(this.Board[i][colNumber]);
+            }
+
+            return tiles;
+        }
+
+        public List<Tile> GetTilesInColumn(int colNumber, int tileValue)
+        {
+            List<Tile> tiles = new List<Tile>();
+            for (int i = 0; i < NumRows; i++)
+            {
+                if (this.Board[i][colNumber].Value == tileValue)
+                    tiles.Add(this.Board[i][colNumber]);
             }
 
             return tiles;
@@ -518,6 +586,8 @@ namespace sudoku.solver
 
             return false;
         }
+        
+        
         /***************************************/
         /************ BOARD VISUALS ************/
         /***************************************/
@@ -556,6 +626,7 @@ namespace sudoku.solver
 
             return sb;
         }
+        
         /*******************************************/
         /************ PRIVATE FUNCTIONS ************/
         /*******************************************/
