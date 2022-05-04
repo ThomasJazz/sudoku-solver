@@ -73,14 +73,9 @@ namespace sudoku.solver
                     Console.WriteLine($"Finding play options for {searchVal}...");
                     var options = playBoard.GetPlays(searchVal);
 
-                    // Make any available moves and sleep for a second
-                    foreach (Tile tile in options)
-                    {
-                        tilesPlayedThisIter.Add(tile);
-
-                        playBoard.PlayTile(tile);
-                        //Thread.Sleep(250);
-                    }
+                    // Make any available moves
+                    tilesPlayedThisIter.AddRange(options);
+                    playBoard.PlayTiles(options);
                 }
                 
                 // Console.WriteLine($"Finding single option tiles...");
