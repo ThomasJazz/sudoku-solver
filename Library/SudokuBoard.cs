@@ -197,6 +197,10 @@ namespace sudoku.solver
 
             return candidates;
         }
+
+        // TODO: Write X-Wing method: https://www.sudokuonline.io/tips/sudoku-x-wing
+
+        // TODO: Write function to get a hint for a single square so we can use it when actually playing
         
         /************ TILE INFO ************/
         /// <summary>
