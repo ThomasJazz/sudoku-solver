@@ -48,7 +48,9 @@ namespace sudoku.solver
             SudokuBoard game = new SudokuBoard();
             game = Sudoku.ReadBoard(RelativeConfigPath);
 
-            game.FindXWings(7);
+            game.PrintBoard();
+            game.UpdateAllTileCandidates();
+            Console.WriteLine();
             // // Playing the game
             // try
             // {

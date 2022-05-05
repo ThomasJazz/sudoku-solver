@@ -765,7 +765,7 @@ namespace sudoku.solver
             this.TileGroups = GetTileGroups();
         }
 
-        private void UpdateAllTileCandidates()
+        public void UpdateAllTileCandidates()
         {
             foreach (List<Tile> row in this.Board)
             {
