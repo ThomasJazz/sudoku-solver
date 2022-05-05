@@ -17,6 +17,7 @@
 // - hard-sudoku-4
 // - hard-sudoku-5
 // - hard-sudoku-6
+// - curr-sudoku-2 (easy)
 
 using System;
 using System.Collections.Generic;
