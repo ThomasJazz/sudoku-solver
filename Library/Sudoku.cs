@@ -67,7 +67,7 @@ namespace sudoku.solver
                 currRow++;
             }
 
-            var tempBoard = new SudokuBoard(tiles);
+            SudokuBoard tempBoard = new SudokuBoard(tiles);
             tempBoard.PrintBoard();
             return tempBoard;
         }

@@ -8,16 +8,18 @@ namespace sudoku.solver
 {
     class SudokuBoard
     {
+        public Logger? Log { get; set; }
         public static int NumRows = 9;
         public static int NumColumns = 9;
-
+        public Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
         public static HashSet<int> NumberSet = new HashSet<int>(){0,1,2,3,4,5,6,7,8,9};
+        public List<Tile> ActionLog = new List<Tile>();
 
         // This tracks the squares on the sudoku board
         private List<List<Tile>> Board = new List<List<Tile>>();
 
         // This groups the tiles and is updated every time Board is updated
-        public Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
+        
 
         /**************************************/
         /************ CONSTRUCTORS ************/
@@ -27,22 +29,29 @@ namespace sudoku.solver
             this.InitializeEmptyBoard();
         }
 
-        public SudokuBoard(List<Tile> tiles)
+        public SudokuBoard(Logger Log)
         {
+            this.Log = Log;
+            this.InitializeEmptyBoard();
+        }
+
+        public SudokuBoard(List<Tile> tiles, Logger Log=null)
+        {
+            this.Log = Log;
             this.InitializeEmptyBoard();
 
             foreach (Tile tile in tiles)
             {
-                this.PlayTile(tile);
+                this.PlayTile(tile, false);
             }
         }
 
         /***************************************/
         /************ TILE MUTATORS ************/
         /***************************************/
-        public void PlayTile(Tile tile)
+        public void PlayTile(Tile tile, bool logAction=true)
         {
-            UpdateTile(tile);
+            UpdateTile(tile, false);
             UpdateTileBoxes();
         }
 
@@ -619,7 +628,7 @@ namespace sudoku.solver
                 sb.Append("\n");
 
                 if (iMod3 == 0)
-                    sb.Append("-----------------------------\n");
+                    sb.Append("---------------------------\n");
             }
 
             return sb;
@@ -646,7 +655,7 @@ namespace sudoku.solver
             UpdateTileBoxes();
         }
 
-        private void UpdateTile(Tile tile)
+        private void UpdateTile(Tile tile, bool logAction=true)
         {
             Helper.PrintJson(tile, false);
             this.Board[tile.Row][tile.Column] = tile;

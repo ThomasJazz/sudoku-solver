@@ -1,17 +1,17 @@
 ﻿//     0  1  2   3  4  5   6  7  8
-//     --TG0-------TG1-------TG2---
+//     --TG0-------TG1-------TG2--
 // 0 | :  :  : | :  3  1 | :  ~  ~ 
 // 1 | ~  :  ~ | :  :  : | #  #  3 
 // 2 | 3  :  1 | :  7  : | :  8  2 
-//   | --TG3-------TG4-------TG5---
+//   | --TG3-------TG4-------TG5--
 // 3 | ~  :  ~ | 1  4  : | 3  :  % 
 // 4 | 1  3  5 | 7  9  6 | 8  2  4 
 // 5 | 7  :  : | 3  %  % | 9  :  % 
-//   | --TG6-------TG7-------TG8---
+//   | --TG6-------TG7-------TG8--
 // 6 | :  :  : | 8  1  3 | 2  5  ~ 
 // 7 | 2  1  3 | ~  6  ~ | 4  :  8 
 // 8 | 5  9  8 | 4  2  7 | #  3  # 
-//     ----------------------------
+//     ---------------------------
 // NOTE: 
 // Fails on:
 // - hard-sudoku-4
@@ -24,13 +24,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 
 // See https://aka.ms/new-console-template for more information
 
 namespace sudoku.solver
 {
-    public class Program
+    public class PlaySudoku
     {
         /****** CONFIG ******/
         private static string BoardName = "curr-sudoku-2.sud";
@@ -41,22 +42,30 @@ namespace sudoku.solver
         /****** BODY ******/
         static void Main(string[] args)
         {
-            SudokuBoard game = new SudokuBoard();
-            game = Sudoku.ReadBoard(RelativeConfigPath);
+            Logger Log = new Logger();
 
-            // Playing the game
-            try
-            {
-                var solved = PlayGame(game);
-                Sudoku.ExportBoard(solved, WriteSolutionToPath);
-            }
-            catch (NoMovesFoundException e)
-            {
-                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCandidates(), "GroupNumber");
-                Helper.PrintJson(mappedOptions);
+            //Log.TestStackTrace();
+            
+            
+            
+            
+            
+            // SudokuBoard game = new SudokuBoard();
+            // game = Sudoku.ReadBoard(RelativeConfigPath);
 
-                Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
-            }
+            // // Playing the game
+            // try
+            // {
+            //     var solved = PlayGame(game);
+            //     Sudoku.ExportBoard(solved, WriteSolutionToPath);
+            // }
+            // catch (NoMovesFoundException e)
+            // {
+            //     var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCandidates(), "GroupNumber");
+            //     Helper.PrintJson(mappedOptions);
+
+            //     Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
+            // }
         }
 
         static SudokuBoard PlayGame(SudokuBoard game)
