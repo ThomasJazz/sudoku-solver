@@ -32,7 +32,7 @@ namespace sudoku.solver
     public class Program
     {
         /****** CONFIG ******/
-        private static string BoardName = "medium-sudoku-2.sud";
+        private static string BoardName = "curr-sudoku-2.sud";
         private static string RelativeConfigPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/{BoardName}");
         private static string WriteNoMovesPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/NoMovesFound/{BoardName}");
         private static string WriteSolutionToPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/Solved/{BoardName}");
