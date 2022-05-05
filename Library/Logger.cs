@@ -13,7 +13,7 @@ namespace sudoku.solver
     public class Logger
     {
         public string? FunctionName { get; set; }
-        
+
         /// <summary>
         /// When Logger is initialized from PlaySudoku.cs...
         /// Environment.StackTrace.Split("\r\n")[2].Split(":line")[0].Split("\\")[^1];
@@ -31,9 +31,17 @@ namespace sudoku.solver
             Console.WriteLine(methodName);
         }
 
-        public static string GetStackTrace()
+        public string GetStackTrace()
         {
             return Environment.StackTrace;
+        }
+
+        public void PrintJson(object o, bool indent=true)
+        {
+            if (indent)
+                Console.WriteLine(JsonConvert.SerializeObject(o, Formatting.Indented));
+            else
+                Console.WriteLine(JsonConvert.SerializeObject(o));
         }
     }
 }

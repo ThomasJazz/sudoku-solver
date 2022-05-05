@@ -6,20 +6,28 @@ using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
+    /// <summary>
+    /// TERMINOLOGY: 
+    /// - "Candidate" prefix means *potentially* accurate tiles 
+    /// - "Certain"/"Certainties" prefix means the tiles are 100% correct
+    /// NOTE: Largely basing these on what I've learned here: 
+    /// https://www.conceptispuzzles.com/index.aspx?uri=puzzle/sudoku/techniques
+    /// </summary>
     class SudokuBoard
     {
+        // For logging tile choices
         public Logger? Log { get; set; }
+        public List<Tile> ActionLog = new List<Tile>();
         public static int NumRows = 9;
         public static int NumColumns = 9;
-        public Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
         public static HashSet<int> NumberSet = new HashSet<int>(){0,1,2,3,4,5,6,7,8,9};
-        public List<Tile> ActionLog = new List<Tile>();
 
         // This tracks the squares on the sudoku board
         private List<List<Tile>> Board = new List<List<Tile>>();
 
         // This groups the tiles and is updated every time Board is updated
-        
+        public Dictionary<int, List<Tile>> TileGroups = new Dictionary<int, List<Tile>>();
+
 
         /**************************************/
         /************ CONSTRUCTORS ************/
@@ -78,11 +86,10 @@ namespace sudoku.solver
         /*****************************************/
         /************ BOARD ACCESSORS ************/
         /*****************************************/
+
+        /************ TILE SEARCH FUNCTIONS ************/
         
-        /************ TILE CANDIDATE SEARCH FUNCTIONS ************/
-        // NOTE: Largely basing these on what I've learned here: 
-        // https://www.conceptispuzzles.com/index.aspx?uri=puzzle/sudoku/techniques
-        public List<Tile> FindBidirectionalCandidates(int number)
+        public List<Tile> FindBidirectionalCertainties(int number)
         {
             List<Tile> returnTiles = new List<Tile>();
             Dictionary<int, List<Tile>> potentialTiles = GetPotentialMoves(number);
@@ -100,7 +107,7 @@ namespace sudoku.solver
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<Tile> FindSingleCandidates()
+        public List<Tile> FindSingleCertainties()
         {
             List<Tile> emptyTiles = GetTilesContainingValue(0);
             List<Tile> playTiles = new List<Tile>();
@@ -108,7 +115,7 @@ namespace sudoku.solver
             // Loop through all the empty tiles and see if they have only one possible value 
             foreach (Tile tile in emptyTiles)
             {
-                HashSet<int> availableNumbers = this.GetPossibleTileValues(tile);
+                HashSet<int> availableNumbers = this.GetTileCandidates(tile);
 
                 // If there is only one possible value, we add it to the list of tiles to return and be played
                 if (availableNumbers.Count == 1)
@@ -127,7 +134,7 @@ namespace sudoku.solver
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<Tile> FindRowCandidates()
+        public List<Tile> FindRowCertainties()
         {
             List<Tile> playableTiles = new List<Tile>();
 
@@ -138,7 +145,7 @@ namespace sudoku.solver
 
                 foreach (Tile tile in emptyTiles)
                 {
-                    var possibleNumbersInTile = GetPossibleTileValues(tile);
+                    var possibleNumbersInTile = GetTileCandidates(tile);
 
                     foreach (int number in possibleNumbersInTile)
                     {
@@ -158,6 +165,7 @@ namespace sudoku.solver
                         playableTiles.Add(new Tile(kvp.Key, temp.Row, temp.Column));
                     }
                 }
+
                 if (rowNumber == 7)
                     Helper.PrintJson(tileOptions);
             }
@@ -169,7 +177,7 @@ namespace sudoku.solver
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<Tile> GetAllTileCandidates()
+        public List<Tile> GetAllTileCertainties()
         {
             List<Tile> emptyTiles = GetTilesContainingValue(0);
             List<Tile> tileOptions = new List<Tile>();
@@ -177,7 +185,7 @@ namespace sudoku.solver
             // Loop through all the empty tiles and see if they have only one possible value 
             foreach (Tile tile in emptyTiles)
             {
-                HashSet<int> availableNumbers = this.GetPossibleTileValues(tile);
+                HashSet<int> availableNumbers = this.GetTileCandidates(tile);
 
                 foreach (int num in availableNumbers)
                 {
@@ -188,26 +196,34 @@ namespace sudoku.solver
             return tileOptions;
         }
 
+        // FIXME:
         public List<TileCandidate> GetGroupNakedPairs()
         {
-            List<TileCandidate> candidates = new List<TileCandidate>();
+            List<TileCandidate> Candidates = new List<TileCandidate>();
 
             foreach (KeyValuePair<int, List<Tile>> group in this.TileGroups)
             {
                 int groupNum = group.Key;
 
                 List<Tile> emptyTiles = group.Value.Where(tile => tile.Value == 0).ToList();
+
                 foreach (Tile tile in emptyTiles)
                 {
                     TileCandidate candidate = new TileCandidate(tile.Row, tile.Column);
-                    candidate.PossibleValues.AddRange(this.GetPossibleTileValues(tile).ToList());
+                    candidate.PossibleValues.AddRange(this.GetTileCandidates(tile).ToList());
                 }
             }
 
-            return candidates;
+            return Candidates;
         }
 
         // TODO: Write X-Wing method: https://www.sudokuonline.io/tips/sudoku-x-wing
+        public List<Tile> SearchForXWing()
+        {
+            List<Tile> xwingCandidates = new List<Tile>();
+
+            return xwingCandidates;
+        }
 
         // TODO: Write function to get a hint for a single square so we can use it when actually playing
         
@@ -258,7 +274,7 @@ namespace sudoku.solver
         }
 
 
-        public HashSet<int> GetPossibleTileValues(Tile tile)
+        public HashSet<int> GetTileCandidates(Tile tile)
         {
             // Get all the values that intersect/collide with this tile
             HashSet<int> rowValues = this.Board[tile.Row].Select(tile => tile.Value).ToHashSet();
@@ -348,7 +364,7 @@ namespace sudoku.solver
         public List<RowLock> GetGroupRowLocks()
         {
             List<RowLock> locks = new List<RowLock>();
-            List<Tile> allOptions = this.GetAllTileCandidates();
+            List<Tile> allOptions = this.GetAllTileCertainties();
             int[] groupNums = this.TileGroups.Keys.ToArray();
             
             // Loop through all tiles in all groups
@@ -387,7 +403,7 @@ namespace sudoku.solver
         public List<ColumnLock> GetGroupColumnLocks()
         {
             List<ColumnLock> locks = new List<ColumnLock>();
-            List<Tile> allOptions = this.GetAllTileCandidates();
+            List<Tile> allOptions = this.GetAllTileCertainties();
             int[] groupNums = this.TileGroups.Keys.ToArray();
             
             // Loop through all tiles in all groups

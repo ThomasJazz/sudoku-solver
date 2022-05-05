@@ -43,29 +43,23 @@ namespace sudoku.solver
         static void Main(string[] args)
         {
             Logger Log = new Logger();
+            
+            SudokuBoard game = new SudokuBoard();
+            game = Sudoku.ReadBoard(RelativeConfigPath);
 
-            //Log.TestStackTrace();
-            
-            
-            
-            
-            
-            // SudokuBoard game = new SudokuBoard();
-            // game = Sudoku.ReadBoard(RelativeConfigPath);
+            // Playing the game
+            try
+            {
+                var solved = PlayGame(game);
+                Sudoku.ExportBoard(solved, WriteSolutionToPath);
+            }
+            catch (NoMovesFoundException e)
+            {
+                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCertainties(), "GroupNumber");
+                //Helper.PrintJson(mappedOptions);
 
-            // // Playing the game
-            // try
-            // {
-            //     var solved = PlayGame(game);
-            //     Sudoku.ExportBoard(solved, WriteSolutionToPath);
-            // }
-            // catch (NoMovesFoundException e)
-            // {
-            //     var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCandidates(), "GroupNumber");
-            //     Helper.PrintJson(mappedOptions);
-
-            //     Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
-            // }
+                Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
+            }
         }
 
         static SudokuBoard PlayGame(SudokuBoard game)
@@ -81,7 +75,7 @@ namespace sudoku.solver
                 for (int searchVal = 1; searchVal <= SudokuBoard.NumRows; searchVal++)
                 {
                     Console.WriteLine($"Finding play options for {searchVal}...");
-                    var options = playBoard.FindBidirectionalCandidates(searchVal);
+                    var options = playBoard.FindBidirectionalCertainties(searchVal);
 
                     // Make any available moves
                     tilesPlayedThisIter.AddRange(options);
@@ -90,12 +84,12 @@ namespace sudoku.solver
                 
                 // Console.WriteLine($"Finding single option tiles...");
                 // Find squares that can only have one specific number placed there
-                var singleOptions = playBoard.FindSingleCandidates();
+                var singleOptions = playBoard.FindSingleCertainties();
                 playBoard.PlayTiles(singleOptions);
                 tilesPlayedThisIter.AddRange(singleOptions);
 
                 // Find squares by row where their neighbors cannot play it
-                var rowOptions = playBoard.FindRowCandidates();
+                var rowOptions = playBoard.FindRowCertainties();
                 playBoard.PlayTiles(rowOptions);
                 tilesPlayedThisIter.AddRange(rowOptions);
 
