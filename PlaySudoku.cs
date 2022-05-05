@@ -31,77 +31,73 @@ using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
-    public class PlaySudoku
+    public static class PlaySudoku
     {
         /****** CONFIG ******/
-        private static string BoardName = "curr-sudoku-2.sud";
-        private static string RelativeConfigPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/{BoardName}");
-        private static string WriteNoMovesPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/NoMovesFound/{BoardName}");
-        private static string WriteSolutionToPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/Solved/{BoardName}");
+        private static string BoardName = "debug-sudoku-1.sud";
+        private static string RelativeConfigPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards\\{BoardName}");
+        private static string WriteNoMovesPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/NoMovesFound\\{BoardName}");
+        private static string WriteSolutionToPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/Solved\\{BoardName}");
+
+        public static Logger Log = new Logger(true);
 
         /****** BODY ******/
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Logger Log = new Logger();
-            
+            Thread.Sleep(4000);
             SudokuBoard game = new SudokuBoard();
             game = Sudoku.ReadBoard(RelativeConfigPath);
 
-            // Playing the game
-            try
-            {
-                var solved = PlayGame(game);
-                Sudoku.ExportBoard(solved, WriteSolutionToPath);
-            }
-            catch (NoMovesFoundException e)
-            {
-                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCertainties(), "GroupNumber");
-                //Helper.PrintJson(mappedOptions);
+            game.FindXWings(7);
+            // // Playing the game
+            // try
+            // {
+            //     var solved = PlayGame(game);
+            //     Sudoku.ExportBoard(solved, WriteSolutionToPath);
+            // }
+            // catch (NoMovesFoundException e)
+            // {
+            //     var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCertainties(), "GroupNumber");
 
-                Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
-            }
+            //     Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
+            //     Log.LogError(e.Message, e);
+            // }
         }
 
-        static SudokuBoard PlayGame(SudokuBoard game)
+        public static SudokuBoard PlayGame(SudokuBoard originalBoard)
         {
-            SudokuBoard playBoard = game;
+            SudokuBoard playBoard = originalBoard;
             int iter = 0;
 
+            // FYI: Important to play tiles after each group of certainties is found so we don't play duplicate moves
             while (playBoard.HasEmptyTile())
             {   
-                List<Tile> tilesPlayedThisIter = new List<Tile>();
+                Log.LogInfo($"Scanning board for tile certainties");
+                List<Tile> tilesPlayed = new List<Tile>();
 
-                // Search for specific numbers to play
-                for (int searchVal = 1; searchVal <= SudokuBoard.NumRows; searchVal++)
-                {
-                    Console.WriteLine($"Finding play options for {searchVal}...");
-                    var options = playBoard.FindBidirectionalCertainties(searchVal);
-
-                    // Make any available moves
-                    tilesPlayedThisIter.AddRange(options);
-                    playBoard.PlayTiles(options);
-                }
+                // Perform bidirectional search and make any available moves
+                var options = playBoard.GetBidirectionalCertainties();
+                tilesPlayed.AddRange(playBoard.PlayTiles(options));
                 
-                // Console.WriteLine($"Finding single option tiles...");
                 // Find squares that can only have one specific number placed there
                 var singleOptions = playBoard.FindSingleCertainties();
-                playBoard.PlayTiles(singleOptions);
-                tilesPlayedThisIter.AddRange(singleOptions);
+                tilesPlayed.AddRange(playBoard.PlayTiles(singleOptions));
 
                 // Find squares by row where their neighbors cannot play it
-                var rowOptions = playBoard.FindRowCertainties();
-                playBoard.PlayTiles(rowOptions);
-                tilesPlayedThisIter.AddRange(rowOptions);
+                var rowOptions = playBoard.GetRowCertainties();
+                tilesPlayed.AddRange(playBoard.PlayTiles(rowOptions));
 
                 iter++;
 
-                Console.WriteLine($"Completed iteration {iter}");
-                playBoard.PrintBoard();
+                // Show some information
+                Console.WriteLine($"Tiles found in iteration #{iter} ({tilesPlayed.Count}): {JsonConvert.SerializeObject(tilesPlayed)}");
 
-                if (tilesPlayedThisIter.Count == 0)
+                playBoard.PrintBoard();
+                Thread.Sleep(2000);
+                if (tilesPlayed.Count == 0)
                 {   
                     throw new NoMovesFoundException($"Can't find a move for any number. Exiting...", 
-                        game, 
+                        originalBoard, 
                         playBoard);
                 }
             }

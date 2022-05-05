@@ -5,10 +5,15 @@ using Newtonsoft.Json;
 
 namespace sudoku.solver
 {
-    class TileParent
+    public class TileParent
     {
+        [JsonProperty("row")]
         public int Row { get; set; }
+
+        [JsonProperty("col")]
         public int Column { get; set; }
+
+        [JsonProperty("group")]
         public int GroupNumber { get; set; }
 
         // public TileParent(int Row, int Column) 
@@ -24,9 +29,12 @@ namespace sudoku.solver
         }
     }
 
-    class Tile : TileParent
+    public class Tile : TileParent
     {
+        [JsonProperty("val")]
         public int Value { get; set; } = 0;
+
+        public HashSet<Tile> Candidates { get; set; }
         
         [JsonIgnore]
         public bool IsFinal { get; } = false;
@@ -38,6 +46,7 @@ namespace sudoku.solver
             this.Column = Column;
 
             this.SetGroupNumber();
+            this.Candidates = new HashSet<Tile>();
         }
 
         public Tile(int Value, int Row, int Column, bool IsFinal)
@@ -48,8 +57,10 @@ namespace sudoku.solver
             this.IsFinal = IsFinal;
 
             this.SetGroupNumber();
+            this.Candidates = new HashSet<Tile>();
         }
 
+        /********** TOSTRING VARIATIONS **********/
         public override string ToString()
         {
             if (Value == 0)
@@ -58,21 +69,33 @@ namespace sudoku.solver
                 return $" {this.Value.ToString()} ";
         }
 
+        public string ToShortString()
+        {
+            return $"[{this.Row},{this.Column}]: {this.Value}";
+        }
+
         public string ToCoordsString()
         {
-            return $"{this.Row}-{this.Value}";
+            return $"[{this.Row},{this.Value}]";
         }
     }
 
-    class TileCandidate : TileParent
-    {
-        public List<int> PossibleValues { get; set; } = new List<int>();
+    // public class TileCandidate : TileParent
+    // {
+    //     public HashSet<int> PossibleValues { get; set; } = new HashSet<int>();
 
-        public TileCandidate(int Row, int Column)
-        {
-            this.Row = Row;
-            this.Column = Column;
-            this.SetGroupNumber();
-        }
-    }
+    //     public TileCandidate(int Row, int Column)
+    //     {
+    //         this.Row = Row;
+    //         this.Column = Column;
+    //         this.SetGroupNumber();
+    //     }
+
+    //     public TileCandidate(int Row, int Column, HashSet<int> )
+    //     {
+    //         this.Row = Row;
+    //         this.Column = Column;
+    //         this.SetGroupNumber();
+    //     }
+    // }
 }
