@@ -260,11 +260,6 @@ namespace sudoku.solver
             return remaining;
         }
 
-        public Tile GetTileCandidateObjects(Tile tile)
-        {
-            return null;
-        }
-
         // public List<List<Tile>> GetCandidatesBoard()
         // {
         //     List<List<Tile>> allCandidates = new List<List<Tile>>();
@@ -313,6 +308,8 @@ namespace sudoku.solver
         /// <returns></returns>
         public List<Tile> FindXWings(int number)
         {
+            //this.SetAllTileCandidates();
+
             List<Tile> xwingCandidates = new List<Tile>();
             List<Tile> allCandidates = this.GetCandidatesForValue(number);
             XWing xwing = new XWing(number);
@@ -757,7 +754,7 @@ namespace sudoku.solver
             //Helper.PrintJson(tile, false);
             this.Board[tile.Row][tile.Column] = tile;
             this.UpdateTileBoxes();
-            this.UpdateAllTileCandidates();
+            this.SetAllTileCandidates();
         }
 
         private void UpdateTileBoxes()
@@ -765,7 +762,7 @@ namespace sudoku.solver
             this.TileGroups = GetTileGroups();
         }
 
-        public void UpdateAllTileCandidates()
+        public void SetAllTileCandidates()
         {
             foreach (List<Tile> row in this.Board)
             {
@@ -775,9 +772,29 @@ namespace sudoku.solver
                     tile.Candidates = new HashSet<Tile>();
 
                     foreach (int num in candidateNums)
-                        tile.Candidates.Add(new Tile(num, tile.Row, tile.Column));
+                        tile.AddCandidate(num);// Candidates.Add(new Tile(tile, num));
                 }
             }
+        }
+        // public void SetAllTileCandidates()
+        // {
+        //     foreach (List<Tile> row in this.Board)
+        //     {
+        //         foreach (Tile tile in row)
+        //         {
+        //             HashSet<int> candidateNums = this.GetTileCandidates(tile);
+        //             tile.Candidates = new HashSet<Candidate>();
+
+        //             foreach (int num in candidateNums)
+        //                 tile.Candidates.Add(new Candidate(tile, num));
+        //         }
+        //     }
+        // }
+
+        public void SetTileCandidates(ref Tile tile)
+        {
+            HashSet<int> candidateNumbers = GetTileCandidates(tile);
+            tile.AddCandidates(candidateNumbers);
         }
 
         private List<Tile> GetFlattenedBoard()

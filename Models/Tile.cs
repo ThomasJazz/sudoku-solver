@@ -34,6 +34,7 @@ namespace sudoku.solver
         [JsonProperty("val")]
         public int Value { get; set; } = 0;
 
+        //public HashSet<Candidate> Candidates { get; set; }
         public HashSet<Tile> Candidates { get; set; }
         
         [JsonIgnore]
@@ -78,24 +79,58 @@ namespace sudoku.solver
         {
             return $"[{this.Row},{this.Value}]";
         }
+
+        public void AddCandidate(int num)
+        {
+            this.Candidates.Add(new Tile(num, this.Row, this.Value));
+        }
+
+        public void AddCandidates(HashSet<int> numbers)
+        {
+            foreach (int num in numbers)
+                this.Candidates.Add(new Tile(num, this.Row, this.Value));
+        }
+
+        public void SetCandidates(List<Tile> tiles)
+        {
+            this.Candidates = tiles.ToHashSet();
+        }
+
+        public bool HasCandidate(int num)
+        {
+            HashSet<int> candidateNums = this.Candidates.Select(cand => cand.Value).ToHashSet();
+            return candidateNums.Contains(num);
+        }
     }
 
-    // public class TileCandidate : TileParent
-    // {
-    //     public HashSet<int> PossibleValues { get; set; } = new HashSet<int>();
+    public class Candidate : TileParent
+    {
+        public int Value { get; set; }
 
-    //     public TileCandidate(int Row, int Column)
-    //     {
-    //         this.Row = Row;
-    //         this.Column = Column;
-    //         this.SetGroupNumber();
-    //     }
+        public Candidate(int Row, int Column)
+        {
+            this.Row = Row;
+            this.Column = Column;
+            this.SetGroupNumber();
+        }
 
-    //     public TileCandidate(int Row, int Column, HashSet<int> )
-    //     {
-    //         this.Row = Row;
-    //         this.Column = Column;
-    //         this.SetGroupNumber();
-    //     }
-    // }
+        public Candidate( int Value, int Row, int Column)
+        {
+            this.Row = Row;
+            this.Column = Column;
+            this.Value = Value;
+        }
+
+        public Candidate(Tile Tile, int Value)
+        {
+            this.Row = Tile.Row;
+            this.Column = Tile.Column;
+            this.Value = Value;
+        }
+
+        public Tile ToTile()
+        {
+            return new Tile(this.Value, this.Row, this.Column);
+        }
+    }
 }

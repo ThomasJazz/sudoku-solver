@@ -49,7 +49,7 @@ namespace sudoku.solver
             game = Sudoku.ReadBoard(RelativeConfigPath);
 
             game.PrintBoard();
-            game.UpdateAllTileCandidates();
+            game.SetAllTileCandidates();
             Console.WriteLine();
             // // Playing the game
             // try
