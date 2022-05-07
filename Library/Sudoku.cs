@@ -37,8 +37,6 @@ namespace sudoku.solver
 
         public static SudokuBoard ReadBoard(string filePath)
         {
-            Console.WriteLine($"Loading board {Path.GetFileName(filePath)}...");
-
             List<Tile> tiles = new List<Tile>();
             List<string> lines = File.ReadAllLines(filePath).ToList();
 
@@ -67,7 +65,7 @@ namespace sudoku.solver
                 currRow++;
             }
 
-            var tempBoard = new SudokuBoard(tiles);
+            SudokuBoard tempBoard = new SudokuBoard(tiles);
             tempBoard.PrintBoard();
             return tempBoard;
         }

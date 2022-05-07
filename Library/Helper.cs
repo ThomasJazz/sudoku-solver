@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Newtonsoft.Json;
+using Pastel;
+
 /*
 Date Created: 10/20/2020
 Authors:
@@ -56,55 +59,6 @@ namespace sudoku.solver
         /**********************************/
         /******** PUBLIC FUNCTIONS ********/
         /**********************************/
-        
-        public static async Task<string> RunService(string requestType, string url, string json="", Dictionary<string, string> headers=null) 
-        {
-            // Set up HttpClient
-            HttpClient httpClient = new HttpClient();
-            HttpRequestMessage request = null;
-
-            // Make new HttpRequest with Method = Get or Post depending on requestType
-            if (requestType.ToUpper() == "GET") {
-                request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri(url),
-                    Content = new StringContent(json)
-                };
-                
-            } else if (requestType.ToUpper() == "POST") {
-                request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri(url),
-                    Content = new StringContent(json)
-                };
-            } else {
-                throw new Exception(@"Invalid requestType passed. Please use ""GET"" or ""POST""");
-            }
-
-            // Add headers if present
-            if (headers != null)
-            {
-                foreach (KeyValuePair<string, string> header in headers)
-                {
-                    request.Headers.Add(header.Key, header.Value);
-                }
-            }
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            
-            // Send our request with the http client
-            var response = await httpClient.SendAsync(request).ConfigureAwait(false);
-
-            // extract the response body from response
-            string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            // if (IsErrorJson(responseBody)) {
-            //     throw new RunServiceException(responseBody);
-            // }
-
-            return responseBody;
-        }
 
         public static string EncodeUrl(string url, Dictionary<string, string> payload)
         {
@@ -432,6 +386,16 @@ namespace sudoku.solver
             
             return tempList;
         }
+
+        // public static List<Dictionary<string, object>> ConvertDictsToLists<TKey, TValue>(Dictionary<TKey, TValue> classInstances)
+        // {
+        //     List<Dictionary<string, object>> tempList = new List<Dictionary<string, object>>();
+
+        //     foreach (Object o in classInstances)
+        //         tempList.Add(GetPropertiesAndValues(o));
+            
+        //     return tempList;
+        // }
 
         /// <summary>
         /// Gets the union of 2 dictionaries using dict1 as the primary dictionary if duplicate keys are found
@@ -1218,9 +1182,9 @@ namespace sudoku.solver
         public static void PrintJson(object o, bool indent=true)
         {
             if (indent)
-                Console.WriteLine(JsonConvert.SerializeObject(o, Formatting.Indented));
+                Console.WriteLine(JsonConvert.SerializeObject(o, Formatting.Indented).Pastel(Color.White));
             else
-                Console.WriteLine(JsonConvert.SerializeObject(o));
+                Console.WriteLine(JsonConvert.SerializeObject(o).Pastel(Color.White));
         }
     }
 }

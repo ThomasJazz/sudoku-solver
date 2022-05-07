@@ -10,7 +10,7 @@ namespace sudoku.solver
         public TileGroup(){}
     }
 
-    class RowLock
+    public class RowLock
     {
         public int GroupNumber { get; set; }
         public int LockedRow { get; set; }
@@ -29,7 +29,7 @@ namespace sudoku.solver
         }
     }
 
-    class ColumnLock
+    public class ColumnLock
     {
         public int GroupNumber { get; set; }
         public int LockedColumn { get; set; }
