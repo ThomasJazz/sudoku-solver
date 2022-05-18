@@ -338,8 +338,17 @@ namespace sudoku.solver
                     xwing.ColumnMatches[tile.Column] = new List<Tile>();
                 
                 xwing.ColumnMatches[tile.Column].Add(tile);
-            }
 
+                var tempTileParent = new TileParent()
+                {
+                    Row = tile.Row,
+                    Column = tile.Column,
+                    GroupNumber = tile.GroupNumber
+                };
+
+                xwing.Coordinates.Add(tempTileParent);
+            }
+            Console.WriteLine();
             foreach (List<Tile> tiles in xwing.RowMatches.Values)
             {
                 // if (tiles.Count)

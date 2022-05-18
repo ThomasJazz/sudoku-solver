@@ -114,7 +114,7 @@ namespace sudoku.solver
             this.SetGroupNumber();
         }
 
-        public Candidate( int Value, int Row, int Column)
+        public Candidate(int Value, int Row, int Column)
         {
             this.Row = Row;
             this.Column = Column;
