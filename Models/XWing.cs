@@ -10,10 +10,12 @@ namespace sudoku.solver
         public int Value { get; set; } = 0;
         public Dictionary<int, List<Tile>> RowMatches { get; set; } = new Dictionary<int, List<Tile>>();
         public Dictionary<int, List<Tile>> ColumnMatches { get; set; } = new Dictionary<int, List<Tile>>();
+        public List<TileParent> Coordinates { get; set; }
 
         public XWing(int Value)
         {
             this.Value = Value;
+            this.Coordinates = new List<TileParent>();
         }
     }
 }

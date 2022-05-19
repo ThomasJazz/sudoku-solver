@@ -34,7 +34,7 @@ namespace sudoku.solver
     public static class PlaySudoku
     {
         /****** CONFIG ******/
-        private static string BoardName = "debug-sudoku-1.sud";
+        private static string BoardName = "xwing-sudoku-1.sud";
         private static string RelativeConfigPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards\\{BoardName}");
         private static string WriteNoMovesPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/NoMovesFound\\{BoardName}");
         private static string WriteSolutionToPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/Solved\\{BoardName}");
@@ -50,6 +50,7 @@ namespace sudoku.solver
 
             game.PrintBoard();
             game.SetAllTileCandidates();
+            game.FindXWingsForNumber(5);
             Console.WriteLine();
             // // Playing the game
             // try

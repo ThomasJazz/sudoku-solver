@@ -306,7 +306,7 @@ namespace sudoku.solver
         /// - https://www.sudokuwiki.org/X_Wing_Strategy
         /// </summary>
         /// <returns></returns>
-        public List<Tile> FindXWings(int number)
+        public List<Tile> FindXWingsForNumber(int number)
         {
             //this.SetAllTileCandidates();
 
@@ -314,6 +314,17 @@ namespace sudoku.solver
             List<Tile> allCandidates = this.GetCandidatesForValue(number);
             XWing xwing = new XWing(number);
             
+            // TODO: Need to go 3 levels deep on this
+                // allCandidates = GetCandidatesForValue(number)
+                // for cand in allCandidates
+                    // candidatesL1 = cand.GetCandidates
+
+                    // for cand1 in candidatesL1
+                        // candidatesL2 = cand.GetCandidates()
+                        // for cand2 in candidatesL2
+                            // if cand
+
+                            
             foreach (Tile tile in allCandidates)
             {
                 // Group up row matches
@@ -327,8 +338,17 @@ namespace sudoku.solver
                     xwing.ColumnMatches[tile.Column] = new List<Tile>();
                 
                 xwing.ColumnMatches[tile.Column].Add(tile);
-            }
 
+                var tempTileParent = new TileParent()
+                {
+                    Row = tile.Row,
+                    Column = tile.Column,
+                    GroupNumber = tile.GroupNumber
+                };
+
+                xwing.Coordinates.Add(tempTileParent);
+            }
+            Console.WriteLine();
             foreach (List<Tile> tiles in xwing.RowMatches.Values)
             {
                 // if (tiles.Count)
