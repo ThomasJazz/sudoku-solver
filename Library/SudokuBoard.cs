@@ -306,62 +306,134 @@ namespace sudoku.solver
         /// - https://www.sudokuwiki.org/X_Wing_Strategy
         /// </summary>
         /// <returns></returns>
+        /// NOTE: This may be a good case to use recursion
         public List<Tile> FindXWingsForNumber(int number)
         {
-            //this.SetAllTileCandidates();
-
+            this.SetAllTileCandidates();
             List<Tile> xwingCandidates = new List<Tile>();
             List<Tile> allCandidates = this.GetCandidatesForValue(number);
-            XWing xwing = new XWing(number);
-            
-            // TODO: Need to go 3 levels deep on this
-                // allCandidates = GetCandidatesForValue(number)
-                // for cand in allCandidates
-                    // candidatesL1 = cand.GetCandidates
 
-                    // for cand1 in candidatesL1
-                        // candidatesL2 = cand.GetCandidates()
-                        // for cand2 in candidatesL2
-                            // if cand
+            //Console.WriteLine(JsonConvert.SerializeObject(allCandidates, Formatting.Indented));
 
-                            
-            foreach (Tile tile in allCandidates)
+            foreach (Tile t1 in allCandidates)
             {
-                // Group up row matches
-                if (!xwing.RowMatches.ContainsKey(tile.Row))
-                    xwing.RowMatches[tile.Row] = new List<Tile>();
-                
-                xwing.RowMatches[tile.Row].Add(tile);
+                Console.WriteLine(JsonConvert.SerializeObject(t1));
 
-                // Group up column matches
-                if (!xwing.ColumnMatches.ContainsKey(tile.Column))
-                    xwing.ColumnMatches[tile.Column] = new List<Tile>();
+                var t1RowMatches = allCandidates.Where(tile => tile.GroupNumber != t1.GroupNumber && tile.Row == t1.Row).ToList();
+                var t1ColMatches = allCandidates.Where(tile => tile.GroupNumber != t1.GroupNumber && tile.Column == t1.Column).ToList();
                 
-                xwing.ColumnMatches[tile.Column].Add(tile);
+                if (t1RowMatches == null || t1RowMatches.Count == 0 || t1ColMatches == null || t1ColMatches.Count == 0)
+                    continue;
+                
 
-                var tempTileParent = new TileParent()
+                Console.WriteLine($"{t1.ToCoordsString()} row matches:");
+                foreach (Tile rowMatch in t1RowMatches)
                 {
-                    Row = tile.Row,
-                    Column = tile.Column,
-                    GroupNumber = tile.GroupNumber
-                };
+                    Console.WriteLine($"\t{rowMatch.ToCoordsString()}");
+                }
+                    
+                Console.WriteLine($"{t1.ToCoordsString()} column matches:");
+                foreach (Tile colMatch in t1ColMatches)
+                {
+                    Console.WriteLine($"\t{colMatch.ToCoordsString()}");
+                }
+                    
 
-                xwing.Coordinates.Add(tempTileParent);
+                Console.WriteLine();
+                if (t1.Row == 1 && t1.Column == 4)
+                {
+                    continue;
+                }
             }
-            Console.WriteLine();
-            foreach (List<Tile> tiles in xwing.RowMatches.Values)
-            {
-                // if (tiles.Count)
-                // foreach (Tile tile in tiles)
-                // int beginSearchAtRow = tile. % 3
-                // int rowDifference = 
-            }
-            
-            //List<Tile> all = this.GetFlattenedTiles(valCandidates);
-
-            Helper.PrintJson(xwing);
             return xwingCandidates;
         }
+
+        public List<Tile> SearchXWingRecursive(List<Tile> candidates, string searchType)
+        {
+            searchType = searchType.ToLower();
+            if (searchType != "column" && searchType != "row")
+                throw new Exception($"Invalid search type specified ({searchType}). Please use 'row' or 'column'");
+
+            foreach (Tile t1 in candidates)
+            {
+                var t1RowMatches = candidates.Where(tile => tile.GroupNumber != t1.GroupNumber && tile.Row == t1.Row).ToList();
+                var t1ColMatches = candidates.Where(tile => tile.GroupNumber != t1.GroupNumber && tile.Column == t1.Column).ToList();
+
+                if (t1RowMatches == null || t1RowMatches.Count == 0 || t1ColMatches == null || t1ColMatches.Count == 0)
+                    return new List<Tile>();
+                
+                if (searchType == "row")
+                    return SearchXWingRecursive(t1RowMatches, "column");
+                else
+                    return SearchXWingRecursive(t1ColMatches, "row");
+            }
+
+            return new List<Tile>();
+        }
+
+        /// <summary>
+        /// Resources:
+        /// - https://www.sudokuonline.io/tips/sudoku-x-wing
+        /// - https://www.sudokuwiki.org/X_Wing_Strategy
+        /// </summary>
+        /// <returns></returns>
+        // public List<Tile> FindXWingsForNumber(int number)
+        // {
+        //     //this.SetAllTileCandidates();
+
+        //     List<Tile> xwingCandidates = new List<Tile>();
+        //     List<Tile> allCandidates = this.GetCandidatesForValue(number);
+        //     XWing xwing = new XWing(number);
+            
+        //     // TODO: Need to go 3 levels deep on this
+        //         // allCandidates = GetCandidatesForValue(number)
+        //         // for cand in allCandidates
+        //             // candidatesL1 = cand.GetCandidates
+
+        //             // for cand1 in candidatesL1
+        //                 // candidatesL2 = cand.GetCandidates()
+        //                 // for cand2 in candidatesL2
+        //                     // if cand
+
+        //     foreach (Tile tile in allCandidates)
+        //     {
+        //         // Group up row matches
+        //         if (!xwing.RowMatches.ContainsKey(tile.Row))
+        //             xwing.RowMatches[tile.Row] = new List<Tile>();
+                
+        //         xwing.RowMatches[tile.Row].Add(tile);
+
+        //         //xwing.RowMatches[tile.Row] = allCandidates.Where(cand => cand.Row == tile.Row).ToList();
+
+        //         // Group up column matches
+        //         if (!xwing.ColumnMatches.ContainsKey(tile.Column))
+        //             xwing.ColumnMatches[tile.Column] = new List<Tile>();
+                
+        //         xwing.ColumnMatches[tile.Column].Add(tile);
+
+        //         var tempTileParent = new TileParent()
+        //         {
+        //             Row = tile.Row,
+        //             Column = tile.Column,
+        //             GroupNumber = tile.GroupNumber
+        //         };
+
+        //         xwing.Coordinates.Add(tempTileParent);
+        //     }
+        //     Console.WriteLine();
+        //     foreach (List<Tile> tiles in xwing.RowMatches.Values)
+        //     {
+        //         // if (tiles.Count)
+        //         // foreach (Tile tile in tiles)
+        //         // int beginSearchAtRow = tile. % 3
+        //         // int rowDifference = 
+        //     }
+            
+        //     //List<Tile> all = this.GetFlattenedTiles(valCandidates);
+
+        //     Helper.PrintJson(xwing);
+        //     return xwingCandidates;
+        // }
 
         // TODO: Write function to get a hint for a single square so we can use it when actually playing
         
@@ -789,13 +861,14 @@ namespace sudoku.solver
                 foreach (Tile tile in row)
                 {
                     HashSet<int> candidateNums = this.GetTileCandidates(tile);
-                    tile.Candidates = new HashSet<Tile>();
+                    tile.Candidates = new HashSet<int>();
 
                     foreach (int num in candidateNums)
                         tile.AddCandidate(num);// Candidates.Add(new Tile(tile, num));
                 }
             }
         }
+
         // public void SetAllTileCandidates()
         // {
         //     foreach (List<Tile> row in this.Board)

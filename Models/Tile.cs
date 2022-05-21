@@ -35,11 +35,14 @@ namespace sudoku.solver
         public int Value { get; set; } = 0;
 
         //public HashSet<Candidate> Candidates { get; set; }
-        public HashSet<Tile> Candidates { get; set; }
+        //public HashSet<Tile> Candidates { get; set; }
+        [JsonIgnore]
+        public HashSet<int> Candidates { get; set; }
         
         [JsonIgnore]
         public bool IsFinal { get; } = false;
 
+        /****** CONSTRUCTORS ******/
         public Tile(int Value, int Row, int Column)
         {
             this.Value = Value;
@@ -47,7 +50,8 @@ namespace sudoku.solver
             this.Column = Column;
 
             this.SetGroupNumber();
-            this.Candidates = new HashSet<Tile>();
+            //this.Candidates = new HashSet<Tile>();
+            this.Candidates = new HashSet<int>();
         }
 
         public Tile(int Value, int Row, int Column, bool IsFinal)
@@ -58,7 +62,8 @@ namespace sudoku.solver
             this.IsFinal = IsFinal;
 
             this.SetGroupNumber();
-            this.Candidates = new HashSet<Tile>();
+            //this.Candidates = new HashSet<Tile>();
+            this.Candidates = new HashSet<int>();
         }
 
         /********** TOSTRING VARIATIONS **********/
@@ -80,26 +85,49 @@ namespace sudoku.solver
             return $"[{this.Row},{this.Value}]";
         }
 
+        public string ToCandidateString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < 9; i++)
+            {
+
+            }
+
+            return sb.ToString();
+        }
+
+        /********** ACCESSORS/MUTATORS **********/
         public void AddCandidate(int num)
         {
-            this.Candidates.Add(new Tile(num, this.Row, this.Value));
+            //this.Candidates.Add(new Tile(num, this.Row, this.Value));
+            this.Candidates.Add(num);
         }
 
         public void AddCandidates(HashSet<int> numbers)
         {
             foreach (int num in numbers)
-                this.Candidates.Add(new Tile(num, this.Row, this.Value));
+            {
+                //this.Candidates.Add(new Tile(num, this.Row, this.Value));
+                this.Candidates.Add(num);
+            }
         }
 
-        public void SetCandidates(List<Tile> tiles)
+        // public void SetCandidates(List<Tile> tiles)
+        // {
+        //     this.Candidates = tiles.ToHashSet();
+        // }
+
+        public void SetCandidates(List<int> candidates)
         {
-            this.Candidates = tiles.ToHashSet();
+            this.Candidates = candidates.ToHashSet();
         }
 
         public bool HasCandidate(int num)
         {
-            HashSet<int> candidateNums = this.Candidates.Select(cand => cand.Value).ToHashSet();
-            return candidateNums.Contains(num);
+            // HashSet<int> candidateNums = this.Candidates.Select(cand => cand.Value).ToHashSet();
+            // return candidateNums.Contains(num);
+            return this.Candidates.Contains(num);
         }
     }
 

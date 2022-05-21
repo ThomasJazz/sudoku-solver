@@ -35,12 +35,11 @@ namespace sudoku.solver
     {
         /****** CONFIG ******/
         // NOTE: Don't use \\ in file paths because it won't work on non-windows systems
-        private static string BoardName = "easy-sudoku-1.sud";
+        private static string BoardName = "xwing-sudoku-1.sud";
         private static string RelativeConfigPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/{BoardName}");
         private static string WriteNoMovesPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/NoMovesFound/{BoardName}");
         private static string WriteSolutionToPath = Path.Combine(Directory.GetCurrentDirectory(), $"SudokuBoards/Solved/{BoardName}");
-
-        //public static Logger Log = new Logger(true);
+        public static Logger Log = new Logger(true);
 
         /****** BODY ******/
         public static void Main(string[] args)
@@ -51,21 +50,21 @@ namespace sudoku.solver
 
             game.PrintBoard();
             game.SetAllTileCandidates();
-            //game.FindXWingsForNumber(5);
+            game.FindXWingsForNumber(5);
             //Console.WriteLine();
             // Playing the game
-            try
-            {
-                var solved = PlayGame(game);
-                Sudoku.ExportBoard(solved, WriteSolutionToPath);
-            }
-            catch (NoMovesFoundException e)
-            {
-                var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCertainties(), "GroupNumber");
+            // try
+            // {
+            //     var solved = PlayGame(game);
+            //     Sudoku.ExportBoard(solved, WriteSolutionToPath);
+            // }
+            // catch (NoMovesFoundException e)
+            // {
+            //     var mappedOptions = Helper.MapModelsToListByKey<Tile>(e.FailedBoard.GetAllTileCertainties(), "GroupNumber");
 
-                Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
-                //Log.LogError(e.Message, e);
-            }
+            //     Sudoku.ExportBoards(e.OriginalBoard, e.FailedBoard, WriteNoMovesPath);
+            //     Log.LogError(e.Message, e);
+            // }
         }
 
         public static SudokuBoard PlayGame(SudokuBoard originalBoard)
@@ -76,7 +75,7 @@ namespace sudoku.solver
             // FYI: Important to play tiles after each group of certainties is found so we don't play duplicate moves
             while (playBoard.HasEmptyTile())
             {   
-                //Log.LogInfo($"Scanning board for tile certainties");
+                Log.LogInfo($"Scanning board for tile certainties");
                 List<Tile> tilesPlayed = new List<Tile>();
 
                 // Perform bidirectional search and make any available moves
@@ -97,7 +96,7 @@ namespace sudoku.solver
                 Console.WriteLine($"Tiles found in iteration #{iter} ({tilesPlayed.Count}): {JsonConvert.SerializeObject(tilesPlayed)}");
 
                 playBoard.PrintBoard();
-                Thread.Sleep(2000);
+                //Thread.Sleep(2000);
                 if (tilesPlayed.Count == 0)
                 {   
                     throw new NoMovesFoundException($"Can't find a move for any number. Exiting...", 
